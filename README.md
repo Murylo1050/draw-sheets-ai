@@ -23,7 +23,8 @@ A ideia é unir o **poder de visualização e consulta do Metabase** com a **int
 - [Go](https://go.dev/) – Backend para orquestração e integração.  
 - [Metabase](https://www.metabase.com/) – Ferramenta de BI e dashboard open-source.  
 - [Google Gemini](https://deepmind.google/technologies/gemini/) – Modelo de IA generativa multimodal.  
-- [Docker](https://www.docker.com/) – Containerização dos serviços (opcional).  
+- [Docker](https://www.docker.com/) – Containerização dos serviços (opcional).
+- [Go-echarts](https://github.com/go-echarts/go-echarts) - Para plotagem dos graficos.
 - [PostgreSQL / MySQL] – Banco de dados para exemplo de integração.  
 
 ---
