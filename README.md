@@ -34,24 +34,28 @@ A ideia é unir o **poder de visualização e consulta do Metabase** com a **int
 ```bash
 git clone https://github.com/seu-usuario/seu-repo.git
 cd seu-repo
-
-2. Configure variáveis de ambiente
+````
+### 2. Configure variáveis de ambiente
 
 Crie um arquivo .env com as seguintes chaves (ajuste conforme seu ambiente):
-
+```bash
 METABASE_URL=http://localhost:3000
 METABASE_API_KEY=chave_api_metabase
 GEMINI_API_KEY=chave_api_gemini
 DATABASE_URL=postgresql://user:password@localhost:5432/database
+```
 
-3. Suba os serviços (se usar Docker)
+###3. Suba os serviços (se usar Docker)
+```bash
 docker compose up -d
+```
 
-4. Rode a aplicação Go
+###4. Rode a aplicação Go
+```bash
 go mod tidy
 go run main.go
-
-💻 Exemplo de Uso
+```
+##💻 Exemplo de Uso
 
 Usuário escreve em linguagem natural:
 "Me mostre a evolução das vendas por mês em 2024"
@@ -60,7 +64,7 @@ O Gemini interpreta a solicitação e gera uma query para o Metabase.
 
 O Metabase retorna os dados e o sistema exibe um gráfico de linhas automaticamente.
 
-📚 Roadmap
+##📚 Roadmap
 
  Implementar suporte a múltiplos bancos de dados.
 
@@ -70,15 +74,14 @@ O Metabase retorna os dados e o sistema exibe um gráfico de linhas automaticame
 
  Exportação de gráficos (PNG, PDF).
 
-🤝 Contribuição
+##🤝 Contribuição
 
 Contribuições são bem-vindas!
 Faça um fork do projeto, crie uma branch com sua feature/bugfix e abra um Pull Request.
 
-📄 Licença
+##📄 Licença
 
 Este projeto está sob a licença MIT – veja o arquivo LICENSE
  para detalhes.
 
 
-Quer que eu faça agora também a **versão em inglês** para deixar o projeto pronto para comunidade internacional?
