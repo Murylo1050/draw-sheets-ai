@@ -1,4 +1,4 @@
-Vou te devolver todo o README.md já formatado exatamente no estilo que você mostrou (sem quebras extras, com títulos e divisores --- no mesmo padrão).
+
 
 # 📊 Metabase + Gemini – Geração Automática de Gráficos
 
