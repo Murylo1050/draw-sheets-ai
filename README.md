@@ -64,7 +64,7 @@ O Gemini interpreta a solicitação e gera uma query para o Metabase.
 
 O Metabase retorna os dados e o sistema exibe um gráfico de linhas automaticamente.
 
-##📚 Roadmap
+## 📚 Roadmap
 
  Implementar suporte a múltiplos bancos de dados.
 
