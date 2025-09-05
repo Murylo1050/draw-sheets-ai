@@ -2,7 +2,7 @@
 
 # 📊 Metabase + Gemini – Geração Automática de Gráficos
 
-Este projeto tem como objetivo **integrar o Metabase** (plataforma de BI e visualização de dados) com o **Gemini** (IA generativa) para possibilitar a criação automática de gráficos a partir de dados corporativos.  
+Este projeto tem como objetivo **integrar o uma interface gráfica** ) com o **Gemini** (IA generativa) e **Go-echarts** para possibilitar a criação automática de gráficos a partir de dados corporativos.  
 
 A ideia é unir o **poder de visualização e consulta do Metabase** com a **inteligência do Gemini**, permitindo que usuários solicitem gráficos em linguagem natural e recebam visualizações prontas de forma rápida e intuitiva.
 
@@ -21,7 +21,6 @@ A ideia é unir o **poder de visualização e consulta do Metabase** com a **int
 ## 🛠️ Tecnologias Utilizadas
 
 - [Go](https://go.dev/) – Backend para orquestração e integração.  
-- [Metabase](https://www.metabase.com/) – Ferramenta de BI e dashboard open-source.  
 - [Google Gemini](https://deepmind.google/technologies/gemini/) – Modelo de IA generativa multimodal.  
 - [Docker](https://www.docker.com/) – Containerização dos serviços (opcional).
 - [Go-echarts](https://github.com/go-echarts/go-echarts) - Para plotagem dos graficos.
