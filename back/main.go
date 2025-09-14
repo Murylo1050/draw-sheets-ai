@@ -8,27 +8,29 @@ import (
 	"os"
 	"strings"
 
-	"google.golang.org/genai"
+	// Importe "google.golang.org/api/option" foi REMOVIDO
+	"github.com/joho/godotenv"
+	"google.golang.org/genai" // Apenas este import do genai é necessário
 )
 
 const prompt_text = `Você é um serviço de API que converte imagens de gráficos em dados JSON. Sua única função é analisar a imagem e retornar um array JSON válido. Não forneça explicações ou qualquer texto que não seja o JSON.
 
 **Exemplo de Saída Esperada:**
 [
-  {
-    "chart_type": "bar",
-    "fake_data": [
-      {"name": "Jan", "value": 150},
-      {"name": "Fev", "value": 200}
-    ]
-  },
-  {
-    "chart_type": "pie",
-    "fake_data": [
-      {"name": "Produto A", "value": 45},
-      {"name": "Produto B", "value": 55}
-    ]
-  }
+  {
+    "chart_type": "bar",
+    "fake_data": [
+      {"name": "Jan", "value": 150},
+      {"name": "Fev", "value": 200}
+    ]
+  },
+  {
+    "chart_type": "pie",
+    "fake_data": [
+      {"name": "Produto A", "value": 45},
+      {"name": "Produto B", "value": 55}
+    ]
+  }
 ]
 
 Analise a imagem fornecida e gere a resposta estritamente nesse formato.`
@@ -44,14 +46,27 @@ type ChartDefinition struct {
 type GeminiDashboardResponse []ChartDefinition
 
 func extractGrapich() {
+	// Pega a chave da API do ambiente (carregada do .env)
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		log.Fatal("A variável de ambiente GEMINI_API_KEY não foi definida.")
+	}
 
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, nil)
+
+	// CORREÇÃO APLICADA AQUI
+	// Inicializa o cliente passando a struct de configuração
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{
+		APIKey: apiKey,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	bytes, _ := os.ReadFile("./teste.png")
+	bytes, err := os.ReadFile("./teste.png")
+	if err != nil {
+		log.Fatalf("Falha ao ler o arquivo de imagem: %v", err)
+	}
 
 	parts := []*genai.Part{
 		genai.NewPartFromBytes(bytes, "image/png"),
@@ -62,19 +77,11 @@ func extractGrapich() {
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}
 
-	// thinkingBudget := int32(0)
-
 	result, err := client.Models.GenerateContent(
-
 		ctx,
-		"gemini-2.5-flash",
+		"gemini-1.5-flash",
 		contents,
 		nil,
-		// &genai.GenerateContentConfig{
-		// 	ThinkingConfig: &genai.ThinkingConfig{
-		// 		ThinkingBudget: &thinkingBudget, // Disables thinking
-		// 	},
-		// },
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -102,9 +109,14 @@ func extractGrapich() {
 			fmt.Printf("  - Nome: %s, Valor: %d\n", data.Name, data.Value)
 		}
 	}
-
 }
 
 func main() {
+	// Carrega as variáveis do arquivo .env no início da execução
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Erro ao carregar o arquivo .env")
+	}
+
 	extractGrapich()
 }

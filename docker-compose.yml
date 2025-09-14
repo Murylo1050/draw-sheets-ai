@@ -1,0 +1,29 @@
+services:
+  frontend:
+    image: node:22
+    container_name: nuxt_frontend
+    working_dir: /app
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npx nuxt dev --host 0.0.0.0 --port 3000"
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
+
+  backend:
+    image: golang:1.24
+    container_name: go_backend
+    working_dir: /app
+    volumes:
+      - ./back:/app
+    ports:
+      - "8080:8080"
+    command: sh -c "go mod tidy && go run main.go"
+    environment:
+      - GO_ENV=development
