@@ -1,0 +1,7 @@
+uploads/*
+.cache
+.vscode-server
+.ssh
+.dotnet
+.config
+.gitconfig

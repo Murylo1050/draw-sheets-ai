@@ -2,11 +2,17 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 
 	// Importe "google.golang.org/api/option" foi REMOVIDO
 	"github.com/joho/godotenv"
@@ -45,70 +51,96 @@ type ChartDefinition struct {
 
 type GeminiDashboardResponse []ChartDefinition
 
-func extractGrapich() {
-	// Pega a chave da API do ambiente (carregada do .env)
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
-		log.Fatal("A variável de ambiente GEMINI_API_KEY não foi definida.")
-	}
+type ImageRequest struct {
+	ImageData string `json:"image_data" binding:"required"`
+}
 
-	ctx := context.Background()
+func extractGrapich(c *gin.Context) {
+    var req ImageRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		fmt.Println(err)
+        return
+    }
 
-	// CORREÇÃO APLICADA AQUI
-	// Inicializa o cliente passando a struct de configuração
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey: apiKey,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+    decodedBytes, err := base64.StdEncoding.DecodeString(req.ImageData)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode base64 image"})
+		fmt.Println(err)
+        return
+    }
 
-	bytes, err := os.ReadFile("./teste.png")
-	if err != nil {
-		log.Fatalf("Falha ao ler o arquivo de imagem: %v", err)
-	}
+	fileName := fmt.Sprintf("uploads/img_%d.png", time.Now().Unix())
 
-	parts := []*genai.Part{
-		genai.NewPartFromBytes(bytes, "image/png"),
-		genai.NewPartFromText(prompt_text),
-	}
+// Garante que a pasta existe
+if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao criar diretório"})
+    return
+}
 
-	contents := []*genai.Content{
-		genai.NewContentFromParts(parts, genai.RoleUser),
-	}
+// Escreve o arquivo
+if err := os.WriteFile(fileName, decodedBytes, 0644); err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao salvar a imagem"})
+    return
+}
 
-	result, err := client.Models.GenerateContent(
-		ctx,
-		"gemini-1.5-flash",
-		contents,
-		nil,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+fmt.Println("Imagem salva em:", fileName)
 
-	rawResponse := result.Text()
-	fmt.Println("--- Resposta Bruta da API ---")
+    apiKey := os.Getenv("GEMINI_API_KEY")
+    if apiKey == "" {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "API key não definida"})
+		fmt.Println(err)
+        return
+    }
 
-	cleanJSON := strings.TrimSpace(rawResponse)
-	cleanJSON = strings.TrimPrefix(cleanJSON, "```json")
-	cleanJSON = strings.TrimSuffix(cleanJSON, "```")
 
-	fmt.Println(cleanJSON)
+    ctx := context.Background()
+    client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: apiKey})
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao inicializar cliente"})
+		fmt.Println(err)
+        return
+    }
 
-	var dashboardData GeminiDashboardResponse
+    parts := []*genai.Part{
+        genai.NewPartFromBytes(decodedBytes, "image/png"),
+        genai.NewPartFromText(prompt_text),
+    }
 
-	if err := json.Unmarshal([]byte(cleanJSON), &dashboardData); err != nil {
-		log.Fatalf("Erro ao converter JSON: %v", err)
-	}
+    contents := []*genai.Content{
+        genai.NewContentFromParts(parts, genai.RoleUser),
+    }
 
-	fmt.Println("\n--- Dados Convertidos com Sucesso ---")
-	for i, chart := range dashboardData {
-		fmt.Printf("Gráfico %d: Tipo = %s\n", i+1, chart.ChartType)
-		for _, data := range chart.FakeData {
-			fmt.Printf("  - Nome: %s, Valor: %d\n", data.Name, data.Value)
-		}
-	}
+    result, err := client.Models.GenerateContent(ctx, "gemini-2.5-flash", contents, nil)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha na requisição ao Gemini"})
+		fmt.Println(err)
+        return
+    }
+
+    // ✅ Proteção contra resposta vazia
+    if len(result.Candidates) == 0 || 
+       result.Candidates[0].Content == nil || 
+       len(result.Candidates[0].Content.Parts) == 0 {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Resposta vazia do Gemini"})
+		fmt.Println(err)
+        return
+    }
+
+    rawResponse := result.Text()
+    cleanJSON := strings.TrimSpace(rawResponse)
+    cleanJSON = strings.TrimPrefix(cleanJSON, "```json")
+    cleanJSON = strings.TrimSuffix(cleanJSON, "```")
+
+    var dashboardData GeminiDashboardResponse
+    if err := json.Unmarshal([]byte(cleanJSON), &dashboardData); err != nil {
+        // Em vez de panic, devolve erro pro cliente
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao converter JSON", "raw": cleanJSON})
+		fmt.Println((err))
+        return
+    }
+
+    c.JSON(http.StatusOK, result)
 }
 
 func main() {
@@ -118,5 +150,22 @@ func main() {
 		log.Fatal("Erro ao carregar o arquivo .env")
 	}
 
-	extractGrapich()
+	router := gin.Default();
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	fmt.Println("Backend Started on PORT 8080")
+
+	router.POST("/generateImage", extractGrapich)
+
+
+	router.Run()
+
+	// extractGrapich()
 }
