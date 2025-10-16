@@ -103,8 +103,8 @@ fmt.Println("Imagem salva em:", fileName)
     }
 
     parts := []*genai.Part{
-        genai.NewPartFromBytes(decodedBytes, "image/png"),
         genai.NewPartFromText(prompt_text),
+		genai.NewPartFromBytes(decodedBytes, "image/png"),
     }
 
     contents := []*genai.Content{
@@ -127,7 +127,7 @@ fmt.Println("Imagem salva em:", fileName)
         return
     }
 
-    rawResponse := result.Text()
+    rawResponse := result.Candidates[0].Content.Parts[0].Text
     cleanJSON := strings.TrimSpace(rawResponse)
     cleanJSON = strings.TrimPrefix(cleanJSON, "```json")
     cleanJSON = strings.TrimSuffix(cleanJSON, "```")
@@ -140,7 +140,7 @@ fmt.Println("Imagem salva em:", fileName)
         return
     }
 
-    c.JSON(http.StatusOK, result)
+    c.JSON(http.StatusOK, cleanJSON)
 }
 
 func main() {
