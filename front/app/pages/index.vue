@@ -1,10 +1,8 @@
 <template>
-  <div
-    class="bg-black w-full h-[100vh] flex flex-col items-center justify-center"
-  >
+  <div class="bg-[#3E4449] w-full h-[100vh] flex flex-col items-center">
     <canvas
       ref="canvasRef"
-      class="border border-gray-400 rounded w-[80%] h-[80%]"
+      class="border border-gray-400 rounded-2xl w-[80%] h-[70%] mt-5"
     />
     <div class="mt-2 flex gap-2">
       <button class="px-3 py-1 bg-red-500 text-white rounded" @click="clear">
@@ -13,6 +11,24 @@
       <button class="px-3 py-1 bg-green-500 text-white rounded" @click="save">
         Salvar
       </button>
+    </div>
+
+    <div
+      class="w-[80%] h-[25%] bg-[#5D6368] rounded-2xl flex flex-col justify-end p-4"
+    >
+      <div
+        v-for="result in data"
+        class="flex flex-col justify-end text-white overflow-y-scroll h-full"
+      >
+        <p>{{ result }}</p>
+      </div>
+      <input
+        id=""
+        placeholder="Dale"
+        type="text"
+        name=""
+        class="w-full h-[20%] rounded-2xl bg-[#9AA0A6] ring-0 px-3"
+      />
     </div>
   </div>
 </template>
@@ -25,6 +41,7 @@ export default {
   data() {
     return {
       signaturePad: null,
+      data: [],
     };
   },
   mounted() {
@@ -68,7 +85,7 @@ export default {
             image_data: dataURL.split(",")[1],
           },
         });
-        console.log("resposta", JSON.parse(res));
+        this.data = JSON.parse(res);
         // aqui você pode enviar para o backend
       }
     },
